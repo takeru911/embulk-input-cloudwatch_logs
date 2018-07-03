@@ -25,6 +25,10 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamFileInput;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 public class CloudwatchLogsInputPlugin
@@ -60,28 +64,25 @@ public class CloudwatchLogsInputPlugin
         public Optional<String> getLogGroupName();
 
         @Config("start_time")
-        @ConfigDefault("\"\"")
-        public Optional<String> getStartTime();
+        public String getStartTime();
 
         @Config("end_time")
-        @ConfigDefault("\"\"")
-        public Optional<String> getEndTime();
+        public String getEndTime();
 
-        //@Config("timezone")
-        //@ConfigDefault("Asia/Tokyo")
-        //public String getTimeZone();
+        @Config("timezone")
+        @ConfigDefault("\"Asia/Tokyo\"")
+        public String getTimeZone();
 
         @Config("limit")
         @ConfigDefault("10000")
         public Integer getLimit();
 
-//        public long getStartTimeUnix();
-//        public void setStartTimeUnix(long startTimeUnix);
-//        public long getEndTimeUnix();
-//        public void setEndTimeUnix(long endTimeUnix);
+        public long getStartTimeUnix();
+        public void setStartTimeUnix(long startTimeUnix);
+        public long getEndTimeUnix();
+        public void setEndTimeUnix(long endTimeUnix);
 
         public List<CloudWatchLogsStream> getLogStreams();
-
         public void setLogStreams(List<CloudWatchLogsStream> logStreams);
 
         @ConfigInject
@@ -96,9 +97,20 @@ public class CloudwatchLogsInputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
         task.setLogStreams(listLogStreams(task));
+        task.setStartTimeUnix(convertToUnixTimestamp(task.getStartTime(), task.getTimeZone()));
+        task.setEndTimeUnix(convertToUnixTimestamp(task.getEndTime(), task.getTimeZone()));
         int taskCount = task.getLogStreams().size();
 
         return resume(task.dump(), taskCount, control);
+    }
+
+    private long convertToUnixTimestamp(String datetimeStr, String timezoneId){
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("YYYY-MM-dd mm:HH:ss");
+        DateTimeZone timezone = DateTimeZone.forID(timezoneId);
+        DateTime dateTime = DateTime.parse(datetimeStr, formatter).withZone(timezone);
+        long unixTimestamp = dateTime.getMillis();
+        LOGGER.debug(String.format("convert %s -> %d", datetimeStr, unixTimestamp));
+        return unixTimestamp;
     }
 
     @Override
@@ -226,7 +238,7 @@ public class CloudwatchLogsInputPlugin
         {
             LOGGER.debug(String.format("task count: %d", taskIndex));
             try {
-                Thread.sleep(200);
+                Thread.sleep(400);
             }
             catch (InterruptedException e) {
                 e.printStackTrace();

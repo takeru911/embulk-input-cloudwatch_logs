@@ -19,12 +19,9 @@ import java.util.List;
 public class CloudWatchLogsStream
 {
 
-    private CloudwatchLogsInputPlugin.PluginTask task;
     private String logGroupName;
     private String logStreamName;
     private String nextToken;
-    private long startTime;
-    private long endTime;
     private final Logger LOGGER = Exec.getLogger(CloudWatchLogsStream.class);
 
     @JsonCreator
@@ -37,9 +34,7 @@ public class CloudWatchLogsStream
     {
         this.logGroupName = logGroupName;
         this.logStreamName = logStreamName;
-        this.task = task;
-        //this.startTime = task.getStartTimeUnix();
-        //this.endTime = task.getEndTimeUnix();
+
     }
 
     @JsonIgnore
@@ -47,10 +42,16 @@ public class CloudWatchLogsStream
     {
         AWSLogs logClient = buildLogsClient(task);
         GetLogEventsRequest request = new GetLogEventsRequest(logGroupName, logStreamName);
+        long startTime = task.getStartTimeUnix();
+        long endTime = task.getEndTimeUnix();
         LOGGER.debug(String.format("logGroupName: %s", logGroupName));
         LOGGER.debug(String.format("logStreamName: %s", logStreamName));
+        LOGGER.debug(String.format("start_time: %d", startTime));
+        LOGGER.debug(String.format("end_time: %d", endTime));
         request.setLimit(task.getLimit());
         request.setStartFromHead(true);
+        request.setStartTime(startTime);
+        request.setEndTime(endTime);
         if (nextToken != null) {
             request.setNextToken(nextToken);
         }
