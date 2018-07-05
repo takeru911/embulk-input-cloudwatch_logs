@@ -40,6 +40,7 @@ public class CloudWatchLogsStream
     @JsonIgnore
     public InputStream generateLogsInputStream(CloudwatchLogsInputPlugin.PluginTask task)
     {
+        //todo: build inputstream by some cw logs.
         AWSLogs logClient = buildLogsClient(task);
         GetLogEventsRequest request = new GetLogEventsRequest(logGroupName, logStreamName);
         long startTime = task.getStartTimeUnix();
@@ -56,7 +57,7 @@ public class CloudWatchLogsStream
             request.setNextToken(nextToken);
         }
         GetLogEventsResult result = logClient.getLogEvents(request);
-        StringBuffer stringBuffer = new StringBuffer();
+
         List<OutputLogEvent> logEvents = result.getEvents();
         LOGGER.debug(String.format("log event size: %d", logEvents.size()));
         if (logEvents.size() == 0) {

@@ -78,11 +78,15 @@ public class CloudwatchLogsInputPlugin
         public Integer getLimit();
 
         public long getStartTimeUnix();
+
         public void setStartTimeUnix(long startTimeUnix);
+
         public long getEndTimeUnix();
+
         public void setEndTimeUnix(long endTimeUnix);
 
         public List<CloudWatchLogsStream> getLogStreams();
+
         public void setLogStreams(List<CloudWatchLogsStream> logStreams);
 
         @ConfigInject
@@ -104,7 +108,8 @@ public class CloudwatchLogsInputPlugin
         return resume(task.dump(), taskCount, control);
     }
 
-    private long convertToUnixTimestamp(String datetimeStr, String timezoneId){
+    private long convertToUnixTimestamp(String datetimeStr, String timezoneId)
+    {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("YYYY-MM-dd mm:HH:ss");
         DateTimeZone timezone = DateTimeZone.forID(timezoneId);
         DateTime dateTime = DateTime.parse(datetimeStr, formatter).withZone(timezone);
@@ -237,12 +242,12 @@ public class CloudwatchLogsInputPlugin
         public InputStream openNext()
         {
             LOGGER.debug(String.format("task count: %d", taskIndex));
-            try {
+            /*try {
                 Thread.sleep(400);
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
             InputStream inputStream = logStream.generateLogsInputStream(task);
             if (inputStream == null) {
                 return null;
